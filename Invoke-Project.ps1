@@ -231,10 +231,10 @@ function Invoke-MavenBuild {
     }
 
     $failureText = [string]::Join([Environment]::NewLine, [string[]]$result.Output)
-    $isWindows = $env:OS -eq 'Windows_NT'
+    $runningOnWindows = $env:OS -eq 'Windows_NT'
     $isCertificateFailure = $failureText -match '(?i)(PKIX path building failed|certificate_unknown)'
     $alreadyUsingWindowsRoots = $originalMavenOpts -match 'trustStoreType=Windows-ROOT'
-    if ($isWindows -and $isCertificateFailure -and -not $alreadyUsingWindowsRoots) {
+    if ($runningOnWindows -and $isCertificateFailure -and -not $alreadyUsingWindowsRoots) {
         Write-Host "Maven could not validate the dependency server certificate with Java's default trust store; retrying with the existing Windows Root trust store for this process."
         $fallbackOptions = (($originalMavenOpts + ' -Djavax.net.ssl.trustStore=NONE -Djavax.net.ssl.trustStoreType=Windows-ROOT').Trim())
         try {

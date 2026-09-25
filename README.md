@@ -4,7 +4,7 @@ A compact Java backend portfolio project for accepting and managing leads. The a
 
 ## Current status
 
-The repository contains the Java 21 / Spring Boot foundation, the initial JPA lead model and Flyway schema migration, and a PowerShell validation workflow. HTTP API slices are still being implemented; see [docs/PORTFOLIO_COMPLETENESS.md](docs/PORTFOLIO_COMPLETENESS.md) for current evidence and remaining work.
+The repository contains the Java 21 / Spring Boot foundation, the JPA lead model and Flyway schema migrations, and create/retrieve/list API slices. Status update, delete, and statistics are still being implemented; see [docs/PORTFOLIO_COMPLETENESS.md](docs/PORTFOLIO_COMPLETENESS.md) for current evidence and remaining work.
 
 ## Technology
 
@@ -13,6 +13,14 @@ The repository contains the Java 21 / Spring Boot foundation, the initial JPA le
 - Maven Wrapper 3.9.16
 - Spring MVC, Bean Validation, Spring Data JPA
 - PostgreSQL and Flyway
+
+## Implemented routes
+
+- `POST /api/leads` validates and normalizes a lead, then returns `201 Created` with a `Location` header. Duplicate normalized email returns `409 Conflict`.
+- `GET /api/leads/{id}` retrieves a lead by UUID (`404 Not Found` when absent).
+- `GET /api/leads?page=0&size=20&status=NEW` lists leads using database paging. `page` defaults to `0`, `size` defaults to `20` and is limited to `1–100`; `status` is optional. Results are ordered by newest creation time, then UUID descending.
+
+Create requests require a nonblank name and valid email; phone is optional. Name, email, and phone are trimmed, and email is stored lowercase. Responses contain the UUID, lead fields, status, and `createdAt` / `updatedAt` timestamps. Validation and malformed identifiers return safe Problem Details.
 
 ## Build the foundation
 
