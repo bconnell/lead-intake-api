@@ -3,6 +3,8 @@ package com.leadintake.api.lead.service;
 import com.leadintake.api.lead.dto.CreateLeadRequest;
 import com.leadintake.api.lead.dto.LeadPageResponse;
 import com.leadintake.api.lead.dto.LeadResponse;
+import com.leadintake.api.lead.dto.LeadStatsResponse;
+import com.leadintake.api.lead.dto.UpdateLeadStatusRequest;
 import com.leadintake.api.lead.model.LeadEntity;
 import com.leadintake.api.lead.model.LeadStatus;
 import com.leadintake.api.lead.repository.LeadRepository;
@@ -34,6 +36,30 @@ public class LeadService {
     public LeadResponse find(UUID id) {
         LeadEntity lead = leadRepository.findById(id).orElseThrow(LeadNotFoundException::new);
         return LeadResponse.from(lead);
+    }
+
+    @Transactional
+    public LeadResponse updateStatus(UUID id, UpdateLeadStatusRequest request) {
+        LeadEntity lead = leadRepository.findById(id).orElseThrow(LeadNotFoundException::new);
+        lead.changeStatus(request.status());
+        return LeadResponse.from(leadRepository.saveAndFlush(lead));
+    }
+
+    @Transactional
+    public void delete(UUID id) {
+        LeadEntity lead = leadRepository.findById(id).orElseThrow(LeadNotFoundException::new);
+        leadRepository.delete(lead);
+    }
+
+    @Transactional(readOnly = true)
+    public LeadStatsResponse stats() {
+        return new LeadStatsResponse(
+                leadRepository.count(),
+                leadRepository.countByStatus(LeadStatus.NEW),
+                leadRepository.countByStatus(LeadStatus.CONTACTED),
+                leadRepository.countByStatus(LeadStatus.QUALIFIED),
+                leadRepository.countByStatus(LeadStatus.CLOSED),
+                leadRepository.countByStatus(LeadStatus.REJECTED));
     }
 
     @Transactional(readOnly = true)

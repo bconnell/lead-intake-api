@@ -3,18 +3,22 @@ package com.leadintake.api.lead.api;
 import com.leadintake.api.lead.dto.CreateLeadRequest;
 import com.leadintake.api.lead.dto.LeadPageResponse;
 import com.leadintake.api.lead.dto.LeadResponse;
+import com.leadintake.api.lead.dto.LeadStatsResponse;
+import com.leadintake.api.lead.dto.UpdateLeadStatusRequest;
 import com.leadintake.api.lead.model.LeadStatus;
 import com.leadintake.api.lead.service.LeadService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
@@ -48,5 +52,23 @@ public class LeadController {
     @GetMapping("/{id}")
     public LeadResponse find(@PathVariable UUID id) {
         return leadService.find(id);
+    }
+
+    @PatchMapping("/{id}/status")
+    public LeadResponse updateStatus(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateLeadStatusRequest request) {
+        return leadService.updateStatus(id, request);
+    }
+
+    @GetMapping("/stats")
+    public LeadStatsResponse stats() {
+        return leadService.stats();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        leadService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
