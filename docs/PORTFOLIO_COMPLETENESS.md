@@ -1,6 +1,6 @@
 # Portfolio completeness
 
-Statuses describe current repository evidence. DONE is reserved for the evidence level required by the project; source code alone does not establish database, hosted CI, or publication proof.
+Statuses: DONE, IN PROGRESS, BLOCKED, DEFERRED, or NOT STARTED. Statuses describe current repository evidence. DONE is reserved for the evidence level required by the project; source code alone does not establish database, hosted CI, or publication proof.
 
 ## Horizontal requirements
 
@@ -21,12 +21,12 @@ Statuses describe current repository evidence. DONE is reserved for the evidence
 | H13 | Fresh migration, JPA/schema agreement, enforced constraints | NOT STARTED | No migration or entity yet. |
 | H14 | Small PostgreSQL Compose development path | NOT STARTED | No Compose file yet. |
 | H15 | Useful Docker-free ordinary development on the low-memory Windows host | IN PROGRESS | Wrapper build and H2 smoke test passed without Docker. A fresh docker info check failed because the Docker Desktop Linux engine pipe is absent; keep PostgreSQL proof available in Docker-capable CI. |
-| H16 | Windows PowerShell 5.1 repository validation workflow with truthful native exit handling | NOT STARTED | Invoke-Project.ps1 is not present yet. |
-| H17 | Fresh Spring Boot packaging and artifact identity proof | NOT STARTED | No package has been built. |
+| H16 | Windows PowerShell 5.1 repository validation workflow with truthful native exit handling | IN PROGRESS | Invoke-Project.ps1 parsed under Windows PowerShell 5.1; Targeted passed; Full clean verify packaged a fresh JAR and returned exit code 2 with PostgreSQL test and Docker blockers stated. Extend checks with the API, Compose, and PostgreSQL tests. |
+| H17 | Fresh Spring Boot packaging and artifact identity proof | IN PROGRESS | Full clean verify produced a fresh nonempty lead-intake-api JAR; its manifest main class and version matched the POM. Reverify on the final candidate. |
 | H18 | Java 21 GitHub Actions CI with Docker-capable PostgreSQL proof | NOT STARTED | No workflow exists yet. |
 | H19 | Secrets, private data, local paths, and unsupported security claims excluded | IN PROGRESS | Initial tracked files and new portable files reviewed for machine-specific content; repeat scans as code and workflows are added. |
 | H20 | Accurate README for behavior, API, database, build, test, run, decisions, limits | IN PROGRESS | README documents the foundation only; expand it as capabilities become real. |
-| H21 | Exact staging, clean diffs, no generated/unrelated files, coherent local commits | IN PROGRESS | Bootstrap was clean. The 13-file foundation candidate was staged exactly; staged diff check, path/secret scan, and review passed. Publication remains unauthorized. |
+| H21 | Exact staging, clean diffs, no generated/unrelated files, coherent local commits | IN PROGRESS | Foundation is in local commit f6e5528. This slice adds the Targeted/Full PowerShell workflow and its current proof; subsequent changes remain local and exact-file staged. Publication remains unauthorized. |
 | H22 | Publication-ready exact candidate with full available validation and review | NOT STARTED | Depends on implementation, tests, packaging, CI configuration, and final audit. |
 | H23 | Explicitly authorized publication and visibility boundary | DEFERRED | Push and visibility changes require separate explicit authorization. Current work remains local. |
 
@@ -44,4 +44,4 @@ Statuses describe current repository evidence. DONE is reserved for the evidence
 
 ## External proof boundary
 
-The last audited machine checkpoint had Java 21 and Git available, no global Maven, and an installed Docker CLI whose engine was unreachable. Recheck current environment before any state-sensitive claim. Local H2 proof is not PostgreSQL proof. Hosted CI has not run for the local candidate. Do not push or change repository visibility without explicit authorization.
+The current Full run used Java 21 and the Maven Wrapper; its test and fresh package checks passed, then it exited 2 because no PostgreSQL Testcontainers test is configured and Docker Engine is unavailable. Local H2 proof is not PostgreSQL proof. Hosted CI has not run for the local candidate. Do not push or change repository visibility without explicit authorization.
