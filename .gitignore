@@ -43,3 +43,6 @@ Thumbs.db
 
 # Testcontainers local overrides
 .testcontainers.properties
+
+# Local-only repository instructions
+AGENTS.local.md
