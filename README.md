@@ -1,10 +1,10 @@
 # Lead Intake API
 
-A compact Java backend portfolio project for accepting and managing leads. It exposes a REST API backed by PostgreSQL, Spring Data JPA, and Flyway.
+[![CI](https://github.com/bconnell/lead-intake-api/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/bconnell/lead-intake-api/actions/workflows/ci.yml?query=branch%3Amain)
 
-## Current status
+A compact Java 21 and Spring Boot 4 REST API for lead intake, backed by PostgreSQL, Spring Data JPA, and Flyway.
 
-All seven API capabilities are implemented across six route patterns. The local Spring integration suite exercises HTTP behavior and persistence with H2; this is a fast development signal, not PostgreSQL proof. See [the portfolio completeness map](docs/PORTFOLIO_COMPLETENESS.md) for current evidence and remaining work.
+The API supports lead creation, retrieval, pagination and filtering, status updates, deletion, and statistics. CI runs the H2-backed test suite and real PostgreSQL Testcontainers integration tests, then starts the Compose database service and verifies its health and readiness. See [validation guidance](docs/VALIDATION.md) for what each check proves.
 
 ## Technology and structure
 
@@ -121,4 +121,4 @@ Use the Maven Wrapper; a globally installed Maven is not required.
 
 The test profile uses an in-memory H2 database to exercise Spring wiring, Flyway, Hibernate validation, persistence constraints, and HTTP behavior. H2 is not PostgreSQL compatibility proof. The Full preset also checks packaging and the real PostgreSQL integration gate; if Docker or that proof path is unavailable, it reports the blocker and exits `2` rather than treating skipped tests as a pass.
 
-`mvn verify` runs the `LeadPostgresIT` suite through Maven Failsafe. It starts PostgreSQL 17 with Testcontainers, then exercises Flyway, Hibernate validation, HTTP persistence, uniqueness, filtering, paging, status updates, statistics, and deletion. GitHub Actions runs the same Maven Wrapper `clean verify` path on Java 21. Ordinary Java development and the Targeted preset do not require Docker Desktop.
+`mvn verify` runs the `LeadPostgresIT` suite through Maven Failsafe. It starts PostgreSQL 17 with Testcontainers, then exercises Flyway, Hibernate validation, HTTP persistence, uniqueness, filtering, paging, status updates, statistics, and deletion. GitHub Actions runs the Maven Wrapper `clean verify` path on Java 21 and separately starts only the Compose database service, waits for it to become healthy, checks `pg_isready`, and removes the service and its volume. The API itself is run from the host; it is not started through Compose. Ordinary Java development and the Targeted preset do not require Docker Desktop.

@@ -17,10 +17,10 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Java 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '21'
@@ -28,3 +28,23 @@ jobs:
 
       - name: Run unit, PostgreSQL integration, and packaging checks
         run: ./mvnw -B -ntp clean verify
+
+      - name: Start PostgreSQL with Compose and verify readiness
+        shell: bash
+        env:
+          POSTGRES_PASSWORD: ci-only-${{ github.run_id }}-${{ github.run_attempt }}
+          POSTGRES_PORT: '54329'
+        run: |
+          project_name="lead-intake-ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          docker compose --project-name "$project_name" up --detach --wait db
+          docker compose --project-name "$project_name" exec --no-TTY db pg_isready -q -U lead_intake -d lead_intake
+
+      - name: Remove PostgreSQL Compose resources
+        if: always()
+        shell: bash
+        env:
+          POSTGRES_PASSWORD: ci-only-${{ github.run_id }}-${{ github.run_attempt }}
+          POSTGRES_PORT: '54329'
+        run: |
+          project_name="lead-intake-ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          docker compose --project-name "$project_name" down --volumes --remove-orphans

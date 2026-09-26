@@ -20,8 +20,8 @@ Do not add authentication, a frontend, additional services, brokers, Kubernetes,
 - Do not run concurrent Maven builds against the same target directory.
 
 ## Repository safety and documentation
-- Preserve all existing Git work. Inspect status and diffs before staging or committing; stage exact intended files.
-- Never reset, clean, stash as disposal, amend, rewrite history, force-push, push, publish, or change repository visibility without explicit authorization.
-- Do not commit secrets, real lead data, personal machine paths, private prompts, local logs, generated output, or the external Gold Standard document.
-- Keep the completion map and README aligned with current behavior and current validation evidence.
-- Do not claim hosted CI, PostgreSQL, packaging, or publication proof unless that exact proof has completed on the exact candidate.
+- Preserve existing work. Inspect repository status and diffs before committing, and stage only the intended files.
+- Keep credentials, personal machine paths, customer data, logs, generated output, and local-only configuration out of version control. Use clearly fictional examples.
+- Keep the README and `docs/VALIDATION.md` aligned with current behavior and validation commands.
+- Distinguish H2 tests from PostgreSQL proof, and do not describe CI or packaging checks as passing unless they completed for the commit being discussed.
+- Use forward-only commits; do not rewrite project history or force-push.

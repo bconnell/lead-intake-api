@@ -164,7 +164,7 @@ function Test-ProjectMetadata {
         'mvnw.cmd',
         'pom.xml',
         'compose.yaml',
-        'docs/PORTFOLIO_COMPLETENESS.md',
+        'docs/VALIDATION.md',
         'src/main/java/com/leadintake/api/LeadIntakeApiApplication.java',
         'src/main/resources/application.yml'
     )
@@ -185,12 +185,12 @@ function Test-ProjectMetadata {
         throw "Maven artifact identity is incomplete."
     }
 
-    $mapPath = Join-Path $script:RepoRoot 'docs/PORTFOLIO_COMPLETENESS.md'
-    $map = [System.IO.File]::ReadAllText($mapPath)
-    $horizontalCount = [regex]::Matches($map, '(?m)^\| H\d{2} \|').Count
-    $verticalCount = [regex]::Matches($map, '(?m)^\| V\d{2} \|').Count
-    if ($horizontalCount -ne 23 -or $verticalCount -ne 7) {
-        throw ("Completion map must cover H01-H23 and V01-V07; found " + $horizontalCount + " horizontal and " + $verticalCount + " vertical rows.")
+    $validationPath = Join-Path $script:RepoRoot 'docs/VALIDATION.md'
+    $validation = [System.IO.File]::ReadAllText($validationPath)
+    foreach ($requiredHeading in @('(?m)^## Local validation\s*$', '(?m)^## GitHub Actions\s*$', '(?m)^## Reading the results\s*$')) {
+        if ($validation -notmatch $requiredHeading) {
+            throw "Validation guidance is missing a required section."
+        }
     }
 
     $wrapperProperties = [System.IO.File]::ReadAllText((Join-Path $script:RepoRoot '.mvn/wrapper/maven-wrapper.properties'))
@@ -199,7 +199,7 @@ function Test-ProjectMetadata {
     }
 
     Write-GatePass ("Project files and Maven identity " + $artifactIdNode.InnerText + ":" + $versionNode.InnerText)
-    Write-GatePass "Completion map includes H01-H23 and V01-V07"
+    Write-GatePass "Public validation guidance covers local and hosted proof boundaries"
 }
 
 function Test-JavaToolchain {
