@@ -88,16 +88,26 @@ Validation and malformed requests return safe `400` Problem Details. A missing l
 
 PostgreSQL is the production database. Flyway owns schema creation and evolution; `spring.jpa.hibernate.ddl-auto` is set to `validate`. Migrations are in `src/main/resources/db/migration`.
 
-Set `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD` for the runtime database connection. Do not commit real credentials. PostgreSQL Compose support is a remaining development-workflow item.
+Set `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD` for the runtime database connection. Do not commit real credentials. The optional Compose setup starts only PostgreSQL; run the API from the host:
+
+```powershell
+Copy-Item .env.example .env
+# Edit .env and set POSTGRES_PASSWORD to a local development password.
+docker compose up --detach --wait db
+```
+
+Compose binds PostgreSQL to `127.0.0.1`, creates the `lead_intake` database/user, persists data in the `postgres_data` volume, and waits for its health check. Set `POSTGRES_PORT` in `.env` to change the host port.
 
 To run against a PostgreSQL database already available on `localhost:5432`, set local environment values and start Spring Boot:
 
 ```powershell
 $env:DB_URL = 'jdbc:postgresql://localhost:5432/lead_intake'
 $env:DB_USERNAME = 'lead_intake'
-$env:DB_PASSWORD = '<your local development password>'
+$env:DB_PASSWORD = '<same value as POSTGRES_PASSWORD in .env>'
 .\mvnw.cmd spring-boot:run
 ```
+
+When finished, stop the database with `docker compose stop db`; its named volume remains in place for the next start.
 
 ## Build and validation
 

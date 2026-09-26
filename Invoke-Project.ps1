@@ -158,10 +158,12 @@ function Test-ProjectMetadata {
         'AGENTS.md',
         '.gitattributes',
         '.gitignore',
+        '.env.example',
         '.mvn/wrapper/maven-wrapper.properties',
         'mvnw',
         'mvnw.cmd',
         'pom.xml',
+        'compose.yaml',
         'docs/PORTFOLIO_COMPLETENESS.md',
         'src/main/java/com/leadintake/api/LeadIntakeApiApplication.java',
         'src/main/resources/application.yml'
@@ -272,6 +274,28 @@ function Test-DockerEngine {
     return $false
 }
 
+function Test-DockerComposeConfiguration {
+    $docker = Get-Command docker.exe -CommandType Application -ErrorAction SilentlyContinue
+    if ($null -eq $docker) {
+        Write-Host "SKIPPED: Docker Compose CLI unavailable; Compose syntax not validated."
+        return
+    }
+
+    $versionResult = Invoke-NativeCapture -Executable $docker.Source -Arguments @('compose', 'version')
+    if ($versionResult.ExitCode -ne 0) {
+        Write-Host "SKIPPED: Docker Compose CLI unavailable; Compose syntax not validated."
+        return
+    }
+
+    $configurationResult = Invoke-NativeCapture -Executable $docker.Source -Arguments @('compose', '--env-file', '.env.example', '-f', 'compose.yaml', 'config', '--quiet')
+    if ($configurationResult.ExitCode -ne 0) {
+        $output = [string]::Join([Environment]::NewLine, [string[]]$configurationResult.Output)
+        throw ("Docker Compose configuration validation failed with exit code " + $configurationResult.ExitCode + ". " + $output)
+    }
+
+    Write-GatePass "Docker Compose configuration syntax"
+}
+
 function Test-PackagedArtifact {
     param([Parameter(Mandatory = $true)][datetime]$BuildStarted)
 
@@ -323,6 +347,7 @@ function Invoke-ProjectValidation {
     Test-PowerShellSyntax
     Test-RepositoryTextHygiene
     Test-ProjectMetadata
+    Test-DockerComposeConfiguration
     Test-JavaToolchain
 
     if ($Preset -eq 'Targeted') {
@@ -365,7 +390,11 @@ function Invoke-ProjectValidation {
 }
 
 try {
-    $result = Invoke-ProjectValidation
+    $validationOutput = @(Invoke-ProjectValidation)
+    if ($validationOutput.Count -eq 0) {
+        throw "Validation completed without returning an exit result."
+    }
+    $result = [int]$validationOutput[$validationOutput.Count - 1]
     exit $result
 }
 catch {
