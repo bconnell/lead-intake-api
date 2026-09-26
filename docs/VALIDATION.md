@@ -17,6 +17,10 @@ Use the committed Maven Wrapper and the repository validation script:
 
 The CI workflow uses Java 21 and the Maven Wrapper. `clean verify` runs the H2-backed tests, the `LeadPostgresIT` Failsafe suite against PostgreSQL 17 through Testcontainers, and Spring Boot packaging. A separate Compose smoke check starts only the `db` service, waits for its health check, calls `pg_isready`, and removes the service and its volume even when an earlier step fails. The API is not launched through Compose.
 
+## Verified hosted run
+
+[CI run 36242542864](https://github.com/bconnell/lead-intake-api/actions/runs/36242542864) passed on commit `cec6856cdc18fe73a30a6b4da0056706daa1e90a`: 39 H2/unit tests and 3 PostgreSQL integration tests passed with no failures or skips, packaging succeeded, and the Compose database became healthy, passed `pg_isready`, and was removed with its volume.
+
 ## Reading the results
 
 H2 tests cover application behavior quickly but do not establish PostgreSQL behavior. The Testcontainers suite exercises the API against PostgreSQL; the Compose smoke check verifies that the documented database service starts and becomes ready. Review the GitHub Actions run for the exact commit under consideration. A skipped or blocked PostgreSQL check is not a pass.
