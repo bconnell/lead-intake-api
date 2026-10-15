@@ -19,7 +19,7 @@ The CI workflow uses Java 21 and the Maven Wrapper. `clean verify` runs the H2-b
 
 ## Verified hosted run
 
-[CI run 36242542864](https://github.com/bconnell/lead-intake-api/actions/runs/36242542864) passed on commit `cec6856cdc18fe73a30a6b4da0056706daa1e90a`: 39 H2/unit tests and 3 PostgreSQL integration tests passed with no failures or skips, packaging succeeded, and the Compose database became healthy, passed `pg_isready`, and was removed with its volume.
+[CI run 36242743644](https://github.com/bconnell/lead-intake-api/actions/runs/36242743644) passed on the inspected `main` commit `6679d359adf5958d98e55f5f319a649d3ccdf235`: 39 application tests and 3 PostgreSQL integration tests passed with no failures or skips, `clean verify` packaged the Spring Boot application, and the Compose database became healthy, passed `pg_isready`, and was removed with its container, network, and volume. This is the latest recorded hosted run for the inspected revision.
 
 ## Reading the results
 

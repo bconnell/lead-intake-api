@@ -4,7 +4,7 @@
 
 A compact Java 21 and Spring Boot 4 REST API for lead intake, backed by PostgreSQL, Spring Data JPA, and Flyway.
 
-The API supports lead creation, retrieval, pagination and filtering, status updates, deletion, and statistics. CI runs the H2-backed test suite and real PostgreSQL Testcontainers integration tests, then starts the Compose database service and verifies its health and readiness. See [validation guidance](docs/VALIDATION.md) for what each check proves.
+The API supports lead creation, retrieval, pagination and filtering, status updates, deletion, and statistics. CI runs the H2-backed test suite and real PostgreSQL Testcontainers integration tests, then starts the Compose database service and verifies its health and readiness. See [validation guidance](docs/VALIDATION.md) for what each check proves and [portfolio completeness](docs/PORTFOLIO_COMPLETENESS.md) for current scope, evidence, and limits.
 
 ## Technology and structure
 
