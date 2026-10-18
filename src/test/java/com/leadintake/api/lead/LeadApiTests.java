@@ -405,10 +405,8 @@ class LeadApiTests {
                 .andExpect(jsonPath("$.detail").value("A lead with this email already exists."));
     }
 
-
     @Test
     void returnsSafeServerErrorForNonEmailDatabaseConstraintViolation() throws Exception {
-        String internalDetail = "ck_leads_status should never appear in the HTTP response";
         DataIntegrityViolationException constraintFailure = assertThrows(
                 DataIntegrityViolationException.class,
                 () -> jdbcTemplate.update(
@@ -436,9 +434,7 @@ class LeadApiTests {
                 .andExpect(jsonPath("$.title").value("Internal Server Error"))
                 .andExpect(jsonPath("$.detail").value("An unexpected error occurred."))
                 .andExpect(jsonPath("$.detail").value(
-                        org.hamcrest.Matchers.not(containsString("ck_leads_status"))))
-                .andExpect(jsonPath("$.detail").value(
-                        org.hamcrest.Matchers.not(containsString(internalDetail))));
+                        org.hamcrest.Matchers.not(containsString("ck_leads_status"))));
     }
 
     private String createRequest(String name, String email, String phone) {
