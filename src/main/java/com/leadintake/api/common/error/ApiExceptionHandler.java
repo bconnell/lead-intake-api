@@ -66,7 +66,7 @@ public class ApiExceptionHandler {
     // PostgreSQL reports the explicit constraint name. H2 may expose the generated
     // backing index name with a numeric suffix and additional index details.
     private static final Pattern EMAIL_UNIQUE_CONSTRAINT = Pattern.compile(
-            "(?i)(?:^|[.\\\"])uk_leads_email(?:_index_[0-9]+)?(?=$|[\\s\\\"])");
+            "(?i)(?:^|\\.)uk_leads_email(?:_index_[0-9]+)?(?=\\s|$)");
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     ProblemDetail handleIntegrityViolation(DataIntegrityViolationException exception) {
@@ -87,7 +87,7 @@ public class ApiExceptionHandler {
             if (cause instanceof ConstraintViolationException violation) {
                 String constraintName = violation.getConstraintName();
                 if (constraintName != null
-                        && EMAIL_UNIQUE_CONSTRAINT.matcher(constraintName).find()) {
+                        && EMAIL_UNIQUE_CONSTRAINT.matcher(constraintName.replace("\"", "")).find()) {
                     return true;
                 }
             }
