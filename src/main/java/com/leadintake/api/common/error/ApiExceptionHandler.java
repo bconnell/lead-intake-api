@@ -1,7 +1,6 @@
 package com.leadintake.api.common.error;
 
 import com.leadintake.api.lead.service.LeadNotFoundException;
-import java.util.regex.Pattern;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -15,8 +14,15 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import java.util.regex.Pattern;
+
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
+    // PostgreSQL reports the explicit constraint name. H2 may expose the generated
+    // backing index name with a numeric suffix and additional index details.
+    private static final Pattern EMAIL_UNIQUE_CONSTRAINT = Pattern.compile(
+            "(?i)(?:^|\\.)uk_leads_email(?:_index_[0-9]+)?(?=\\s|$)");
 
     @ExceptionHandler(LeadNotFoundException.class)
     ProblemDetail handleNotFound() {
@@ -62,11 +68,6 @@ public class ApiExceptionHandler {
         problem.setTitle("Bad Request");
         return problem;
     }
-
-    // PostgreSQL reports the explicit constraint name. H2 may expose the generated
-    // backing index name with a numeric suffix and additional index details.
-    private static final Pattern EMAIL_UNIQUE_CONSTRAINT = Pattern.compile(
-            "(?i)(?:^|\\.)uk_leads_email(?:_index_[0-9]+)?(?=\\s|$)");
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     ProblemDetail handleIntegrityViolation(DataIntegrityViolationException exception) {
