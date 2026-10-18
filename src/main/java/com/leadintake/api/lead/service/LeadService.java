@@ -8,6 +8,7 @@ import com.leadintake.api.lead.dto.UpdateLeadStatusRequest;
 import com.leadintake.api.lead.model.LeadEntity;
 import com.leadintake.api.lead.model.LeadStatus;
 import com.leadintake.api.lead.repository.LeadRepository;
+import com.leadintake.api.lead.repository.LeadStatusCount;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +16,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -53,13 +56,21 @@ public class LeadService {
 
     @Transactional(readOnly = true)
     public LeadStatsResponse stats() {
+        Map<LeadStatus, Long> counts = new EnumMap<>(LeadStatus.class);
+        long total = 0L;
+
+        for (LeadStatusCount result : leadRepository.countByStatusGrouped()) {
+            counts.put(result.status(), result.count());
+            total += result.count();
+        }
+
         return new LeadStatsResponse(
-                leadRepository.count(),
-                leadRepository.countByStatus(LeadStatus.NEW),
-                leadRepository.countByStatus(LeadStatus.CONTACTED),
-                leadRepository.countByStatus(LeadStatus.QUALIFIED),
-                leadRepository.countByStatus(LeadStatus.CLOSED),
-                leadRepository.countByStatus(LeadStatus.REJECTED));
+                total,
+                counts.getOrDefault(LeadStatus.NEW, 0L),
+                counts.getOrDefault(LeadStatus.CONTACTED, 0L),
+                counts.getOrDefault(LeadStatus.QUALIFIED, 0L),
+                counts.getOrDefault(LeadStatus.CLOSED, 0L),
+                counts.getOrDefault(LeadStatus.REJECTED, 0L));
     }
 
     @Transactional(readOnly = true)
