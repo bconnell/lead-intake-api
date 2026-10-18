@@ -217,6 +217,8 @@ class LeadApiTests {
                 .andExpect(jsonPath("$.closed").value(1))
                 .andExpect(jsonPath("$.rejected").value(0));
 
+        verify(leadRepository).countByStatusGrouped();
+        verify(leadRepository, never()).count();
         verify(leadRepository, never()).findAll();
         verify(leadRepository, never()).findAll(any(Pageable.class));
     }

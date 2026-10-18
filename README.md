@@ -12,7 +12,7 @@ The API supports lead creation, retrieval, pagination and filtering, status upda
 - Spring MVC and Jakarta Bean Validation
 - Controllers and request/response DTOs define the HTTP boundary
 - Services own transactions and lead operations
-- Spring Data repositories provide persistence, paging, filtering, and count queries
+- Spring Data repositories provide persistence, database-backed paging and filtering, and single-query grouped status statistics
 - JPA entities map to the Flyway-owned schema; Hibernate validates the schema at startup
 
 ## API
@@ -69,7 +69,7 @@ GET /api/leads?status=QUALIFIED&page=0&size=20
 
 The response contains `content`, `page`, `size`, `totalElements`, and `totalPages`. Results are ordered by creation time descending, then UUID descending.
 
-Statistics response:
+Statistics response (one grouped database query supplies the total and per-status counts from the same statement):
 
 ```json
 {
