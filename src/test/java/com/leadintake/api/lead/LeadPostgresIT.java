@@ -24,6 +24,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -117,17 +120,41 @@ class LeadPostgresIT {
                 .andExpect(jsonPath("$.totalElements").value(2))
                 .andExpect(jsonPath("$.totalPages").value(2));
 
+        clearInvocations(leadRepository);
         mockMvc.perform(get("/api/leads/stats"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value(3))
+                .andExpect(jsonPath("$['new']").value(1))
+                .andExpect(jsonPath("$.contacted").value(0))
                 .andExpect(jsonPath("$.qualified").value(2))
-                .andExpect(jsonPath("$['new']").value(1));
+                .andExpect(jsonPath("$.closed").value(0))
+                .andExpect(jsonPath("$.rejected").value(0));
+
+        verify(leadRepository).countByStatusGrouped();
+        verify(leadRepository, never()).count();
 
         mockMvc.perform(delete("/api/leads/{id}", firstQualifiedId))
                 .andExpect(status().isNoContent());
         assertThat(leadRepository.findById(firstQualifiedId)).isEmpty();
     }
 
+
+    @Test
+    void returnsZeroForEveryStatusWhenPostgresHasNoLeads() throws Exception {
+        clearInvocations(leadRepository);
+
+        mockMvc.perform(get("/api/leads/stats"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(0))
+                .andExpect(jsonPath("$['new']").value(0))
+                .andExpect(jsonPath("$.contacted").value(0))
+                .andExpect(jsonPath("$.qualified").value(0))
+                .andExpect(jsonPath("$.closed").value(0))
+                .andExpect(jsonPath("$.rejected").value(0));
+
+        verify(leadRepository).countByStatusGrouped();
+        verify(leadRepository, never()).count();
+    }
 
     @Test
     void preservesSafeProblemDetailsForPostgresCheckConstraintViolations() throws Exception {
