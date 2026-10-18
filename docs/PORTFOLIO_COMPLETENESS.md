@@ -1,6 +1,6 @@
 # Portfolio completeness
 
-Reviewed on 2026-10-15 against `main` at `6679d359adf5958d98e55f5f319a649d3ccdf235`.
+Reviewed on 2026-10-17 against the validated code revision `e26ccc2812e712ebff17b947314aed8a8f25be5a` on the integrity-classification pull request.
 
 **Maturity:** Available (Unhardened) for the API and database scope listed here. This describes the implemented portfolio contract. It is not a production deployment or security certification.
 
@@ -21,9 +21,9 @@ The supported statuses are `NEW`, `CONTACTED`, `QUALIFIED`, `CLOSED`, and `REJEC
 
 ## Evidence for the inspected revision
 
-The latest recorded hosted run for the inspected `main` revision is [CI run 36242743644](https://github.com/bconnell/lead-intake-api/actions/runs/36242743644).
+The hosted validation of the inspected code revision is [CI run 39081372196](https://github.com/bconnell/lead-intake-api/actions/runs/39081372196).
 
-- `clean verify` completed with 39 application tests and 3 PostgreSQL Testcontainers integration tests. There were no failures, errors, or skipped tests.
+- `clean verify` completed with 40 application tests and 4 PostgreSQL Testcontainers integration tests. There were no failures, errors, or skipped tests.
 - Spring Boot packaging completed successfully.
 - The Compose PostgreSQL service became healthy, passed the configured `pg_isready` check, and was removed with its container, network, and volume.
 - The run checked out the exact commit recorded above. Its results apply to that revision.
@@ -34,19 +34,19 @@ The latest recorded hosted run for the inspected `main` revision is [CI run 3624
 |---|---|---|
 | API behavior | Available (Unhardened) | HTTP tests cover validation, creation, retrieval, pagination, filtering, status updates, deletion, statistics, and safe error responses |
 | Persistence and recovery | Available (Unhardened) | Flyway owns two migrations; Hibernate validates the schema; PostgreSQL integration tests exercise persistence and constraints |
-| Failure handling | In Progress | Constraint-classification fix and regression tests are proposed; fresh H2 and PostgreSQL validation is required before this can be marked available |
+| Failure handling | Available (Unhardened) | HTTP tests cover safe not-found, duplicate email, and unrelated database integrity failure responses against H2 and PostgreSQL; full operational monitoring and recovery remain outside scope |
 | Performance and resource use | Available (Unhardened) | Database-backed paging, a maximum page size of 100, and count queries avoid returning whole tables; no high-volume performance budget has been measured |
 | Packaging and reproducibility | Available (Unhardened) | The Maven Wrapper and fresh Spring Boot packaging are exercised in hosted CI |
 | Accessibility and visual quality | Not applicable | This API has no visual interface |
 | Production operations | Not in scope | No deployment, authentication, monitoring, backup, or operational readiness claim is made |
 
-## Integrity classification change under validation
+## Database integrity error classification
 
-The proposed change on `fix/classify-database-integrity-failures-20261017` distinguishes the named `uk_leads_email` uniqueness violation from other database integrity failures. Only that recognized constraint maps to `409 Conflict` with the existing duplicate-email response. An unrelated or unrecognized violation maps to the same generic `500 Internal Server Error` response used for unexpected application failures, with no constraint or driver details in the HTTP body.
+The API distinguishes the named `uk_leads_email` uniqueness violation from other database integrity failures. Only that recognized constraint maps to `409 Conflict` with the existing duplicate-email response. An unrelated or unrecognized violation maps to the same generic `500 Internal Server Error` response used for unexpected application failures, with no constraint or driver details in the HTTP body.
 
-Regression cases now include the existing end-to-end duplicate-email checks and new HTTP-boundary checks using actual status-check failures from both H2 and PostgreSQL. The PostgreSQL cases still require an executing Testcontainers environment for verification.
+Regression coverage includes end-to-end duplicate-email checks and HTTP-boundary checks using actual status-check failures from H2 and PostgreSQL. The hosted run above exercised the PostgreSQL cases through Testcontainers.
 
-**Validation status:** This implementation is proposed, not yet certified by a fresh test run. The prior hosted evidence above belongs to the earlier inspected `main` revision, not to this change. The branch must pass the Targeted and Full validation requirements in [VALIDATION.md](VALIDATION.md) before merge.
+**Validation status:** Hosted `clean verify` passed for the reviewed code revision, with no skipped tests, and the PostgreSQL Compose readiness and cleanup stages succeeded. Evidence is scoped to that commit; later code changes require fresh validation. This does not establish production deployment or security readiness.
 
 ## Explicit scope limits
 
