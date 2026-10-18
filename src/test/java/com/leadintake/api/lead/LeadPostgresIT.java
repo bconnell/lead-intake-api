@@ -1,6 +1,7 @@
 package com.leadintake.api.lead;
 
 import com.leadintake.api.lead.model.LeadStatus;
+import com.leadintake.api.lead.model.LeadEntity;
 import com.leadintake.api.lead.repository.LeadRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,15 +9,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.UUID;
+import java.time.OffsetDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -34,7 +41,7 @@ class LeadPostgresIT {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
+    @MockitoSpyBean
     private LeadRepository leadRepository;
 
     @Autowired
@@ -119,6 +126,37 @@ class LeadPostgresIT {
         mockMvc.perform(delete("/api/leads/{id}", firstQualifiedId))
                 .andExpect(status().isNoContent());
         assertThat(leadRepository.findById(firstQualifiedId)).isEmpty();
+    }
+
+
+    @Test
+    void preservesSafeProblemDetailsForPostgresCheckConstraintViolations() throws Exception {
+        DataIntegrityViolationException constraintFailure = assertThrows(
+                DataIntegrityViolationException.class,
+                () -> jdbcTemplate.update(
+                        "INSERT INTO leads (id, name, email, status, created_at, updated_at) "
+                                + "VALUES (?, ?, ?, ?, ?, ?)",
+                        UUID.randomUUID(),
+                        "Invalid Check Constraint",
+                        "invalid-check-" + UUID.randomUUID() + "@example.test",
+                        "NOT_A_SUPPORTED_STATUS",
+                        OffsetDateTime.now(),
+                        OffsetDateTime.now()));
+
+        // Use the actual PostgreSQL integrity exception rather than an invented message.
+        doThrow(constraintFailure).when(leadRepository).save(any(LeadEntity.class));
+
+        mockMvc.perform(post("/api/leads")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createRequest(
+                                "Valid Postgres Lead",
+                                "unexpected-" + UUID.randomUUID() + "@example.test")))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.status").value(500))
+                .andExpect(jsonPath("$.title").value("Internal Server Error"))
+                .andExpect(jsonPath("$.detail").value("An unexpected error occurred."));
+
+        assertThat(leadRepository.count()).isZero();
     }
 
     private UUID createLead(String email) throws Exception {

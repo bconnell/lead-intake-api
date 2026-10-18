@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.data.domain.Pageable;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -23,6 +24,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.clearInvocations;
@@ -401,6 +403,38 @@ class LeadApiTests {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
                 .andExpect(jsonPath("$.detail").value("A lead with this email already exists."));
+    }
+
+    @Test
+    void returnsSafeServerErrorForNonEmailDatabaseConstraintViolation() throws Exception {
+        DataIntegrityViolationException constraintFailure = assertThrows(
+                DataIntegrityViolationException.class,
+                () -> jdbcTemplate.update(
+                        "INSERT INTO leads (id, name, email, status, created_at, updated_at) "
+                                + "VALUES (?, ?, ?, ?, ?, ?)",
+                        UUID.randomUUID(),
+                        "Invalid Check Constraint",
+                        "invalid-check-" + UUID.randomUUID() + "@example.test",
+                        "NOT_A_SUPPORTED_STATUS",
+                        OffsetDateTime.now(),
+                        OffsetDateTime.now()));
+
+        // Replay a real H2 check-constraint failure across the HTTP persistence boundary.
+        // The test deliberately passes no invalid DTO fields to the controller.
+        doThrow(constraintFailure).when(leadRepository).save(any(LeadEntity.class));
+
+        mockMvc.perform(post("/api/leads")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createRequest(
+                                "Valid Lead",
+                                "server-error-" + UUID.randomUUID() + "@example.test",
+                                null)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.status").value(500))
+                .andExpect(jsonPath("$.title").value("Internal Server Error"))
+                .andExpect(jsonPath("$.detail").value("An unexpected error occurred."))
+                .andExpect(jsonPath("$.detail").value(
+                        org.hamcrest.Matchers.not(containsString("ck_leads_status"))));
     }
 
     private String createRequest(String name, String email, String phone) {
