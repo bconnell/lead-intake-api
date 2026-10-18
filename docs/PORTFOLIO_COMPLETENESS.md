@@ -40,11 +40,13 @@ The latest recorded hosted run for the inspected `main` revision is [CI run 3624
 | Accessibility and visual quality | Not applicable | This API has no visual interface |
 | Production operations | Not in scope | No deployment, authentication, monitoring, backup, or operational readiness claim is made |
 
-## Remaining engineering finding
+## Integrity classification change under validation
 
-`ApiExceptionHandler.handleConflict` currently converts every `DataIntegrityViolationException` into a `409 Conflict` saying the email already exists. The schema also has required-field and status-check constraints. If one of those constraints fails because of a future code defect or an unexpected persistence condition, the response will incorrectly blame the user's email.
+The proposed change on `fix/classify-database-integrity-failures-20261017` distinguishes the named `uk_leads_email` uniqueness violation from other database integrity failures. Only that recognized constraint maps to `409 Conflict` with the existing duplicate-email response. An unrelated or unrecognized violation maps to the same generic `500 Internal Server Error` response used for unexpected application failures, with no constraint or driver details in the HTTP body.
 
-The next code loop should distinguish the named email uniqueness constraint from other integrity failures, retain the current duplicate-email `409`, return a generic safe server error for unexpected constraint failures, and add regression coverage against both the H2 application path and PostgreSQL Testcontainers path. Do not expose database constraint names or driver messages in HTTP responses.
+Regression cases now include the existing end-to-end duplicate-email checks and new HTTP-boundary checks using actual status-check failures from both H2 and PostgreSQL. The PostgreSQL cases still require an executing Testcontainers environment for verification.
+
+**Validation status:** This implementation is proposed, not yet certified by a fresh test run. The prior hosted evidence above belongs to the earlier inspected `main` revision, not to this change. The branch must pass the Targeted and Full validation requirements in [VALIDATION.md](VALIDATION.md) before merge.
 
 ## Explicit scope limits
 
