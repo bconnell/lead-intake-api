@@ -34,7 +34,7 @@ The latest recorded hosted run for the inspected `main` revision is [CI run 3624
 |---|---|---|
 | API behavior | Available (Unhardened) | HTTP tests cover validation, creation, retrieval, pagination, filtering, status updates, deletion, statistics, and safe error responses |
 | Persistence and recovery | Available (Unhardened) | Flyway owns two migrations; Hibernate validates the schema; PostgreSQL integration tests exercise persistence and constraints |
-| Failure handling | In Progress | Expected not-found and duplicate-email responses are covered. One constraint-classification defect is listed below |
+| Failure handling | In Progress | Constraint-classification fix and regression tests are proposed; fresh H2 and PostgreSQL validation is required before this can be marked available |
 | Performance and resource use | Available (Unhardened) | Database-backed paging, a maximum page size of 100, and count queries avoid returning whole tables; no high-volume performance budget has been measured |
 | Packaging and reproducibility | Available (Unhardened) | The Maven Wrapper and fresh Spring Boot packaging are exercised in hosted CI |
 | Accessibility and visual quality | Not applicable | This API has no visual interface |
