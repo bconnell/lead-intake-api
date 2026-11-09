@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.data.domain.Pageable;
+import org.springframework.core.env.Environment;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
@@ -48,11 +49,19 @@ class LeadApiTests {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private Environment environment;
+
     @MockitoSpyBean
     private LeadRepository leadRepository;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Test
+    void keepsTheUnauthenticatedApiOnLoopbackByDefault() {
+        assertThat(environment.getProperty("server.address")).isEqualTo("127.0.0.1");
+    }
 
     @Test
     void createsLeadAndReturnsItsLocationAndPersistedFields() throws Exception {
