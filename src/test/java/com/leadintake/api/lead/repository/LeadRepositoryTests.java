@@ -29,10 +29,10 @@ class LeadRepositoryTests {
     @Test
     void flywayAppliesTheInitialLeadSchema() {
         Integer appliedMigrations = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM flyway_schema_history WHERE version IN ('1', '2') AND success = TRUE",
+                "SELECT COUNT(*) FROM flyway_schema_history WHERE version IN ('1', '2', '3') AND success = TRUE",
                 Integer.class);
 
-        assertThat(appliedMigrations).isEqualTo(2);
+        assertThat(appliedMigrations).isEqualTo(3);
     }
 
     @Test
