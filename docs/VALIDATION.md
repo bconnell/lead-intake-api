@@ -2,6 +2,10 @@
 
 This project separates fast application feedback from checks that require a real PostgreSQL server.
 
+## Local-only network boundary
+
+The application binds to loopback (`127.0.0.1`) unless `SERVER_ADDRESS` is explicitly configured. This is a safe default for an unauthenticated demonstration API, not a substitute for authentication, authorization, or request rate limiting. An operator must verify external access controls before enabling non-loopback listening. The test suite verifies the configured default; it does not prove external gateway security.
+
 ## Local validation
 
 Use the committed Maven Wrapper and the repository validation script:
