@@ -10,17 +10,20 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 import java.time.OffsetDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -58,10 +61,25 @@ class LeadPostgresIT {
     @Test
     void appliesFlywayMigrationsAndStartsWithValidatedJpaMapping() {
         Long appliedMigrations = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM flyway_schema_history WHERE version IN ('1', '2') AND success = TRUE",
+                "SELECT COUNT(*) FROM flyway_schema_history WHERE version IN ('1', '2', '3') AND success = TRUE",
                 Long.class);
 
-        assertThat(appliedMigrations).isEqualTo(2L);
+        assertThat(appliedMigrations).isEqualTo(3L);
+    }
+
+    @Test
+    @Transactional
+    void postgresRejectsStaleStatusWriterAfterConcurrentVersionAdvance() {
+        LeadEntity lead = leadRepository.saveAndFlush(new LeadEntity(
+                "Stale Writer", "postgres-stale-" + UUID.randomUUID() + "@example.test", null));
+        int changed = jdbcTemplate.update(
+                "UPDATE leads SET status = 'CONTACTED', version = version + 1 WHERE id = ?",
+                lead.getId());
+        assertThat(changed).isEqualTo(1);
+
+        lead.changeStatus(LeadStatus.QUALIFIED);
+        assertThatThrownBy(() -> leadRepository.saveAndFlush(lead))
+                .isInstanceOf(OptimisticLockingFailureException.class);
     }
 
     @Test
