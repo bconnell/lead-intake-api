@@ -58,10 +58,10 @@ class LeadPostgresIT {
     @Test
     void appliesFlywayMigrationsAndStartsWithValidatedJpaMapping() {
         Long appliedMigrations = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM flyway_schema_history WHERE version IN ('1', '2') AND success = TRUE",
+                "SELECT COUNT(*) FROM flyway_schema_history WHERE version IN ('1', '2', '3') AND success = TRUE",
                 Long.class);
 
-        assertThat(appliedMigrations).isEqualTo(2L);
+        assertThat(appliedMigrations).isEqualTo(3L);
     }
 
     @Test
