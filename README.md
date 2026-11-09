@@ -4,7 +4,9 @@
 
 A compact Java 21 and Spring Boot 4 REST API for lead intake, backed by PostgreSQL, Spring Data JPA, and Flyway.
 
-The API supports lead creation, retrieval, pagination and filtering, status updates, deletion, and statistics. CI runs the H2-backed test suite and real PostgreSQL Testcontainers integration tests, then starts the Compose database service and verifies its health and readiness. See [validation guidance](docs/VALIDATION.md) for what each check proves and [portfolio completeness](docs/PORTFOLIO_COMPLETENESS.md) for current scope, evidence, and limits.
+The API supports lead creation, retrieval, pagination and filtering, status updates, deletion, and statistics.
+
+**Security boundary:** This portfolio API intentionally does not implement authentication or authorization. Its GET endpoints expose contact details and its PATCH/DELETE endpoints change or remove leads. It therefore binds to `127.0.0.1` by default. **Do not expose it directly to the public internet or an untrusted network.** Any real deployment needs an authenticated, authorized, rate-limited front end or gateway, with access restrictions verified end to end. Set `SERVER_ADDRESS` explicitly only after that protection exists; setting it to `0.0.0.0` alone does not make the API safe. CI runs the H2-backed test suite and real PostgreSQL Testcontainers integration tests, then starts the Compose database service and verifies its health and readiness. See [validation guidance](docs/VALIDATION.md) for what each check proves and [portfolio completeness](docs/PORTFOLIO_COMPLETENESS.md) for current scope, evidence, and limits.
 
 ## Technology and structure
 
