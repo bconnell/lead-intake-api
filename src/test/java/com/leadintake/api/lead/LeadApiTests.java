@@ -11,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.data.domain.Pageable;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -127,6 +128,25 @@ class LeadApiTests {
                 .andExpect(jsonPath("$.status").value(targetStatus.name()));
 
         assertThat(leadRepository.findById(id).orElseThrow().getStatus()).isEqualTo(targetStatus);
+    }
+
+    @Test
+    void reportsSafeConflictForConcurrentStatusModification() throws Exception {
+        UUID id = UUID.randomUUID();
+        insertLead(id, "conflict-" + id + "@example.test", LeadStatus.NEW,
+                OffsetDateTime.parse("2020-01-02T03:04:05Z"));
+        doThrow(new OptimisticLockingFailureException("internal state must not leak"))
+                .when(leadRepository).saveAndFlush(any(LeadEntity.class));
+
+        mockMvc.perform(patch("/api/leads/{id}/status", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"QUALIFIED\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.detail")
+                        .value("Lead changed while this request was being processed. Reload and retry."))
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.not(
+                        containsString("internal state must not leak"))));
     }
 
     @Test
