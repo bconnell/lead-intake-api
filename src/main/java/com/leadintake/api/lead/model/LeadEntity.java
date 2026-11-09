@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -41,6 +42,12 @@ public class LeadEntity {
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    // Database-backed optimistic version prevents a delayed status writer
+    // from silently replacing a newer status or resurrecting a deleted row.
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
 
     protected LeadEntity() {
     }
