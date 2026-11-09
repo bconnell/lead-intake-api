@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,6 +54,23 @@ class LeadRepositoryTests {
         assertThat(reloaded.getStatus()).isEqualTo(LeadStatus.NEW);
         assertThat(reloaded.getCreatedAt()).isEqualTo(saved.getCreatedAt());
         assertThat(reloaded.getUpdatedAt()).isEqualTo(saved.getUpdatedAt());
+    }
+
+    @Test
+    void rejectsStaleLeadStatusWriteAfterAnotherWriterAdvancesItsVersion() {
+        LeadEntity lead = leadRepository.saveAndFlush(
+                new LeadEntity("Concurrent Test", "stale-" + UUID.randomUUID() + "@example.test", null));
+        UUID id = lead.getId();
+
+        int changed = jdbcTemplate.update(
+                "UPDATE leads SET status = 'CONTACTED', version = version + 1 WHERE id = ?", id);
+        assertThat(changed).isEqualTo(1);
+
+        // The JPA entity still carries the older version. Its delayed
+        // mutation must not silently overwrite the newer database value.
+        lead.changeStatus(LeadStatus.QUALIFIED);
+        assertThatThrownBy(() -> leadRepository.saveAndFlush(lead))
+                .isInstanceOf(OptimisticLockingFailureException.class);
     }
 
     @Test
