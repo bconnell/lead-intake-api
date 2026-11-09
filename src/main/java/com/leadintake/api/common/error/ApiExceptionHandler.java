@@ -3,6 +3,7 @@ package com.leadintake.api.common.error;
 import com.leadintake.api.lead.service.LeadNotFoundException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
@@ -66,6 +67,15 @@ public class ApiExceptionHandler {
                 HttpStatus.BAD_REQUEST,
                 "Request parameters are invalid.");
         problem.setTitle("Bad Request");
+        return problem;
+    }
+
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    ProblemDetail handleConcurrentModification() {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                "Lead changed while this request was being processed. Reload and retry.");
+        problem.setTitle("Conflict");
         return problem;
     }
 
