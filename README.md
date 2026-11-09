@@ -11,7 +11,7 @@ The API supports lead creation, retrieval, pagination and filtering, status upda
 - Java 21, Spring Boot 4, and Maven Wrapper
 - Spring MVC and Jakarta Bean Validation
 - Controllers and request/response DTOs define the HTTP boundary
-- Services own transactions and lead operations
+- Services own transactions and lead operations, with optimistic version guards against conflicting lead mutations
 - Spring Data repositories provide persistence, database-backed paging and filtering, and single-query grouped status statistics
 - JPA entities map to the Flyway-owned schema; Hibernate validates the schema at startup
 
@@ -52,7 +52,7 @@ Successful create, retrieve, and status-update responses use the same DTO shape:
 }
 ```
 
-The supported statuses are `NEW`, `CONTACTED`, `QUALIFIED`, `CLOSED`, and `REJECTED`. For example:
+The supported statuses are `NEW`, `CONTACTED`, `QUALIFIED`, `CLOSED`, and `REJECTED`. A concurrent status change or deletion is protected by a database-backed optimistic version check; if an earlier writer loses the race, the API returns a safe `409 Conflict` directing the caller to reload before retrying. This preserves the existing response DTO and five-status contract. For example:
 
 ```http
 PATCH /api/leads/8e03978e-40d5-43e8-bc93-6894a57f9324/status
@@ -82,11 +82,11 @@ Statistics response (one grouped database query supplies the total and per-statu
 }
 ```
 
-Validation and malformed requests return safe `400` Problem Details. A missing lead returns `404`, a duplicate email returns `409`, deletion returns an empty `204`, and unexpected failures return a generic `500` response without exception details.
+Validation and malformed requests return safe `400` Problem Details. A missing lead returns `404`, a duplicate email or conflicting concurrent update returns `409`, deletion returns an empty `204`, and unexpected failures return a generic `500` response without exception details.
 
 ## Database and configuration
 
-PostgreSQL is the production database. Flyway owns schema creation and evolution; `spring.jpa.hibernate.ddl-auto` is set to `validate`. Migrations are in `src/main/resources/db/migration`.
+PostgreSQL is the production database. Flyway owns schema creation and evolution; `spring.jpa.hibernate.ddl-auto` is set to `validate`. Migrations are in `src/main/resources/db/migration`. The additive third migration gives existing lead rows a version of zero. The version is intentionally internal to persistence and does not change JSON fields. External SQL clients that modify leads must advance `version` atomically, or avoid writing to the same managed rows; bypassing the version rule defeats optimistic conflict detection.
 
 Set `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD` for the runtime database connection. Do not commit real credentials. The optional Compose setup starts only PostgreSQL; run the API from the host:
 
