@@ -15,11 +15,13 @@ Use the committed Maven Wrapper and the repository validation script:
 
 ## GitHub Actions
 
+The new H2 and PostgreSQL regression cases create a stale managed lead, advance the stored version independently, then verify the stale mutation fails rather than overwriting another writer. A MockMvc case verifies a generic `409 Conflict` without exposing the underlying error. The Flyway checks now require the additive third migration. These gates must be rerun on the exact PR head before claiming the change is validated.
+
 The CI workflow uses Java 21 and the Maven Wrapper. `clean verify` runs the H2-backed tests, the `LeadPostgresIT` Failsafe suite against PostgreSQL 17 through Testcontainers, and Spring Boot packaging. A separate Compose smoke check starts only the `db` service, waits for its health check, calls `pg_isready`, and removes the service and its volume even when an earlier step fails. The API is not launched through Compose.
 
 ## Verified hosted run
 
-[CI run 36242743644](https://github.com/bconnell/lead-intake-api/actions/runs/36242743644) passed on the inspected `main` commit `6679d359adf5958d98e55f5f319a649d3ccdf235`: 39 application tests and 3 PostgreSQL integration tests passed with no failures or skips, `clean verify` packaged the Spring Boot application, and the Compose database became healthy, passed `pg_isready`, and was removed with its container, network, and volume. This is the latest recorded hosted run for the inspected revision.
+[CI run 36242743644](https://github.com/bconnell/lead-intake-api/actions/runs/36242743644) passed on the inspected `main` commit `6679d359adf5958d98e55f5f319a649d3ccdf235`: 39 application tests and 3 PostgreSQL integration tests passed with no failures or skips, `clean verify` packaged the Spring Boot application, and the Compose database became healthy, passed `pg_isready`, and was removed with its container, network, and volume. This was the latest recorded hosted run for that older revision; it is **not** validation of the November optimistic-concurrency candidate. Check the exact candidate's CI runs before merging.
 
 ## Reading the results
 
